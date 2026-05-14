@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 
-/** Ganti untuk tugas / laporan */
 const AUTHOR_NAME = "Arya Achmad Caesar";
 const AUTHOR_NPM = "237006093";
 
@@ -115,6 +114,8 @@ export default function Home() {
   const [priceResult, setPriceResult] = useState<ParsedPrice | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [displayCurrency, setDisplayCurrency] = useState<"USD" | "IDR">("USD");
+  const USD_TO_IDR = 17546.65; // static conversion rate for display only
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -164,7 +165,7 @@ export default function Home() {
   const display = submitted ?? form;
 
   return (
-    <div className="relative min-h-full overflow-hidden bg-linear-to-br from-zinc-50 via-white to-emerald-50/40 dark:from-zinc-950 dark:via-zinc-900 dark:to-emerald-950/20">
+    <div className="relative min-h-screen overflow-hidden bg-linear-to-br from-zinc-50 via-white to-emerald-50/40 dark:from-zinc-950 dark:via-zinc-900 dark:to-emerald-950/20">
       <div
         className="pointer-events-none absolute inset-0 opacity-[0.35] dark:opacity-20"
         style={{
@@ -173,34 +174,36 @@ export default function Home() {
         }}
       />
 
-      <main className="relative mx-auto flex max-w-6xl flex-col gap-8 px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
-        <header className="text-center lg:text-left">
-          <p className="text-sm font-medium text-emerald-700 dark:text-emerald-400">
-            Estimasi berbasis atribut kendaraan
-          </p>
-          <h1 className="mt-1 text-3xl font-bold tracking-tight text-zinc-900 sm:text-4xl dark:text-white">
-            Prediksi Harga Mobil
-          </h1>
-          <p className="mx-auto mt-2 max-w-2xl text-sm text-zinc-600 lg:mx-0 dark:text-zinc-400">
-            Isi data lalu hitung — langsung{" "}
-            <code className="rounded bg-zinc-100 px-1 py-0.5 text-xs dark:bg-zinc-800">
-              POST …/predict
-            </code>{" "}
-            ke Python. URL di{" "}
-            <code className="rounded bg-zinc-100 px-1 py-0.5 text-xs dark:bg-zinc-800">
-              NEXT_PUBLIC_PREDICT_API_BASE
-            </code>
-            . Respons{" "}
-            <code className="rounded bg-zinc-100 px-1 py-0.5 text-xs dark:bg-zinc-800">
-              data.predicted_price_in_thousands
-            </code>{" "}
-            diinterpretasi sebagai ribuan USD (×1000 untuk tampilan). Pastikan CORS
-            di Python mengizinkan origin frontend.
-          </p>
-        </header>
+      <main className="relative mx-auto flex max-w-4xl lg:max-w-6xl flex-col gap-8 px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
+        <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
+          <header className="text-center lg:text-left lg:flex-1">
+            <p className="text-sm font-medium text-emerald-700 dark:text-emerald-400">
+              Estimasi berbasis atribut kendaraan
+            </p>
+            <h1 className="mt-1 text-3xl font-bold tracking-tight text-zinc-900 sm:text-4xl dark:text-white">
+              Prediksi Harga Mobil
+            </h1>
+          </header>
+
+          <div className="w-full lg:w-120">
+            <div className="rounded-2xl border border-sky-200/70 bg-linear-to-br from-sky-50 to-sky-100/60 p-4 text-sm shadow-md shadow-sky-100/50 dark:border-sky-900/40 dark:from-sky-950/35 dark:to-sky-900/20 dark:shadow-black/30">
+              <p className="text-xs font-semibold uppercase tracking-wide text-sky-800 dark:text-sky-300">
+                Sistem ini dibuat oleh
+              </p>
+              <div className="mt-3 space-y-2 text-zinc-800 dark:text-zinc-200">
+                <div className="flex flex-row items-baseline gap-3">
+                  <span className="shrink-0 font-medium text-sky-900 dark:text-sky-200">Nama</span>
+                  <span className="min-h-5 flex-10 border-b border-dotted border-sky-300/80 pb-0.5 text-zinc-600 dark:border-sky-700 dark:text-zinc-400">{AUTHOR_NAME}</span>
+                 <span className="shrink-0 font-medium text-sky-900 dark:text-sky-200">NPM</span>
+                  <span className="min-h-5 flex-1 border-b border-dotted border-sky-300/80 pb-0.5 text-zinc-600 dark:border-sky-700 dark:text-zinc-400">{AUTHOR_NPM}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
 
         <div className="grid gap-8 lg:grid-cols-12 lg:items-start lg:gap-10">
-          <section className="lg:col-span-5">
+          <section className="lg:col-span-5 lg:sticky lg:top-24 self-start">
             <form
               onSubmit={handleSubmit}
               className="rounded-2xl border border-zinc-200/80 bg-white/80 p-6 shadow-lg shadow-zinc-200/50 backdrop-blur-sm dark:border-zinc-800 dark:bg-zinc-900/70 dark:shadow-black/40 sm:p-8"
@@ -208,33 +211,32 @@ export default function Home() {
               <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">
                 Fitur model
               </h2>
-              <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-                Field dan key JSON mengikuti API Model-API Anda.
-              </p>
 
-              <div className="mt-6 space-y-5">
-                {FIELDS.map(({ key, label, step, min }) => (
-                  <div key={key}>
-                    <label htmlFor={key} className={labelClass}>
-                      {label}
-                    </label>
-                    <input
-                      id={key}
-                      type="number"
-                      min={min}
-                      step={step ?? "any"}
-                      className={fieldClass}
-                      value={form[key]}
-                      onChange={(e) => {
-                        const v = Number(e.target.value);
-                        setForm((s) => ({
-                          ...s,
-                          [key]: Number.isFinite(v) ? v : s[key],
-                        }));
-                      }}
-                    />
-                  </div>
-                ))}
+              <div className="mt-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-[480px] overflow-y-auto pr-2">
+                  {FIELDS.map(({ key, label, step, min }) => (
+                    <div key={key} className="flex flex-col">
+                      <label htmlFor={key} className={labelClass}>
+                        {label}
+                      </label>
+                      <input
+                        id={key}
+                        type="number"
+                        min={min}
+                        step={step ?? "any"}
+                        className={fieldClass}
+                        value={form[key]}
+                        onChange={(e) => {
+                          const v = Number(e.target.value);
+                          setForm((s) => ({
+                            ...s,
+                            [key]: Number.isFinite(v) ? v : s[key],
+                          }));
+                        }}
+                      />
+                    </div>
+                  ))}
+                </div>
               </div>
 
               <button
@@ -248,26 +250,56 @@ export default function Home() {
           </section>
 
           <div className="flex flex-col gap-6 lg:col-span-7">
+            
+
             <section className="rounded-2xl border border-zinc-200/80 bg-white/80 p-6 shadow-lg shadow-zinc-200/50 backdrop-blur-sm dark:border-zinc-800 dark:bg-zinc-900/70 dark:shadow-black/40 sm:p-8">
               <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
                 Perkiraan harga mobil
               </h2>
 
               <div className="mt-6 rounded-2xl border border-amber-200/80 bg-linear-to-br from-amber-50 to-amber-100/80 p-8 text-center shadow-inner dark:border-amber-900/50 dark:from-amber-950/40 dark:to-amber-900/20">
-                <p className="text-xs font-medium uppercase tracking-wider text-amber-800/90 dark:text-amber-200/80">
-                  Estimasi
-                </p>
+                <div className="flex items-center justify-between">
+                  <p className="text-xs font-medium uppercase tracking-wider text-amber-800/90 dark:text-amber-200/80">
+                    Estimasi
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setDisplayCurrency("USD")}
+                      className={`text-xs rounded-md px-2 py-1 ${displayCurrency === "USD" ? "bg-white/90 text-amber-900" : "bg-white/30 text-amber-700"} dark:${displayCurrency === "USD" ? "bg-zinc-900 text-amber-100" : "bg-zinc-800/40 text-amber-200"}`}
+                    >
+                      USD
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setDisplayCurrency("IDR")}
+                      className={`text-xs rounded-md px-2 py-1 ${displayCurrency === "IDR" ? "bg-white/90 text-amber-900" : "bg-white/30 text-amber-700"} dark:${displayCurrency === "IDR" ? "bg-zinc-900 text-amber-100" : "bg-zinc-800/40 text-amber-200"}`}
+                    >
+                      IDR
+                    </button>
+                  </div>
+                </div>
+
                 <p className="mt-2 min-h-10 wrap-break-word text-3xl font-bold tabular-nums tracking-tight text-amber-950 sm:text-4xl dark:text-amber-100">
                   {loading ? (
-                    <span className="text-amber-800/80 dark:text-amber-200/70">
-                      Menghitung…
-                    </span>
+                    <span className="text-amber-800/80 dark:text-amber-200/70">Menghitung…</span>
                   ) : priceResult !== null ? (
-                    formatMoney(priceResult)
+                    // compute shown value based on displayCurrency
+                    (() => {
+                      if (!priceResult) return null;
+                      if (displayCurrency === priceResult.currency) return formatMoney(priceResult);
+                      if (displayCurrency === "IDR" && priceResult.currency === "USD") {
+                        const amt = Math.round(priceResult.amount * USD_TO_IDR);
+                        return formatMoney({ amount: amt, currency: "IDR" });
+                      }
+                      if (displayCurrency === "USD" && priceResult.currency === "IDR") {
+                        const amt = Math.round(priceResult.amount / USD_TO_IDR);
+                        return formatMoney({ amount: amt, currency: "USD" });
+                      }
+                      return formatMoney(priceResult);
+                    })()
                   ) : (
-                    <span className="text-2xl font-semibold text-amber-800/70 dark:text-amber-200/60">
-                      Tekan hitung
-                    </span>
+                    <span className="text-2xl font-semibold text-amber-800/70 dark:text-amber-200/60">Tekan hitung</span>
                   )}
                 </p>
                 {error && (
@@ -277,7 +309,13 @@ export default function Home() {
                 )}
                 {!loading && priceResult !== null && submitted && (
                   <p className="mt-3 text-xs text-amber-900/70 dark:text-amber-200/60">
-                    Output model (USD). Sesuaikan di Python jika satuan berbeda.
+                    {displayCurrency !== priceResult.currency ? (
+                      <>
+                        Konversi dari {priceResult.currency} • 1 USD ≈ {USD_TO_IDR.toLocaleString()} IDR
+                      </>
+                    ) : (
+                      <>Output model ({priceResult.currency}).</>
+                    )}
                   </p>
                 )}
               </div>
@@ -301,30 +339,6 @@ export default function Home() {
                 </ul>
               </div>
             </section>
-
-            <footer className="rounded-2xl border border-sky-200/70 bg-linear-to-br from-sky-50 to-sky-100/60 p-6 text-sm shadow-md shadow-sky-100/50 dark:border-sky-900/40 dark:from-sky-950/35 dark:to-sky-900/20 dark:shadow-black/30 sm:p-7">
-              <p className="text-xs font-semibold uppercase tracking-wide text-sky-800 dark:text-sky-300">
-                Sistem ini dibuat oleh
-              </p>
-              <div className="mt-4 space-y-3 text-zinc-800 dark:text-zinc-200">
-                <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:gap-3">
-                  <span className="shrink-0 font-medium text-sky-900 dark:text-sky-200">
-                    Nama
-                  </span>
-                  <span className="min-h-5 flex-1 border-b border-dotted border-sky-300/80 pb-0.5 text-zinc-600 dark:border-sky-700 dark:text-zinc-400">
-                    {AUTHOR_NAME}
-                  </span>
-                </div>
-                <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:gap-3">
-                  <span className="shrink-0 font-medium text-sky-900 dark:text-sky-200">
-                    NPM
-                  </span>
-                  <span className="min-h-5 flex-1 border-b border-dotted border-sky-300/80 pb-0.5 text-zinc-600 dark:border-sky-700 dark:text-zinc-400">
-                    {AUTHOR_NPM}
-                  </span>
-                </div>
-              </div>
-            </footer>
           </div>
         </div>
       </main>
